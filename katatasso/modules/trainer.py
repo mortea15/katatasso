@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
 import sqlite3
+import sys
 
-from katatasso.helpers.const import CATEGORIES, FP_MODEL, DBFILE, CLF_TRAININGDATA_PATH
-from katatasso.helpers.extraction import get_file_paths, make_dictionary
+import emailyzer
+
+from katatasso.helpers.const import (CATEGORIES, CLF_TRAININGDATA_PATH, DBFILE,
+                                     FP_MODEL)
+from katatasso.helpers.extraction import (get_all_tags, get_file_paths,
+                                          make_dictionary)
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import progress_bar, save_model
 
@@ -19,32 +23,21 @@ except ModuleNotFoundError:
 
 # Create a data set for the classification
 def make_dataset(dictionary):
-    file_paths = get_file_paths()
     features = []
     labels = []
-    logger.info(f'Creating dataset from {len(file_paths)} files')
-    for fp in progress_bar(file_paths):
-        data = []
-        with open(fp, encoding='latin-1') as f:
-            words = f.read().split()
-        for entry in dictionary:
-            data.append(words.count(entry[0]))
-        features.append(data)
+    tags = get_all_tags()
+    if tags:
+        logger.info(f'Creating dataset from {len(tags)} files')
+        for filename, tag in progress_bar(tags):
+            filepath = CLF_TRAININGDATA_PATH + filename
+            data = []
+            email = emailyzer.from_file(filepath)
+            words = email.html_as_text.split()
 
-        if 'legit' in fp:
-            tag = 0
-        elif 'spam' in fp:
-            tag = 1
-        elif 'phishing' in fp:
-            tag = 2
-        elif 'malware' in fp:
-            tag = 3
-        elif 'fraud' in fp:
-            tag = 4
-        else:
-            tag = 5
-        
-        labels.append(tag)
+            for entry in dictionary:
+                data.append(words.count(entry[0]))
+            features.append(data)
+            labels.append(tag)
         
     return features, labels
 
