@@ -4,6 +4,8 @@ import sqlite3
 import sys
 from collections import Counter
 
+import emailyzer
+
 from katatasso.helpers.const import CLF_DICT_NUM, CLF_TRAININGDATA_PATH, DBFILE
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import progress_bar
@@ -35,13 +37,13 @@ def get_file_paths():
 
 # Make a dictionary of the most frequent words
 def make_dictionary():
-    file_paths = get_file_paths()
+    tags = get_all_tags()
     words = []
     logger.info('Creating dictionary..')
-    for fp in progress_bar(file_paths):
-        with open(fp, encoding='latin-1') as f:
-            content = f.read()
-            words += content.split()
+    for filename, tag in progress_bar(tags):
+        filepath = CLF_TRAININGDATA_PATH + filename
+        email = emailyzer.from_file(filepath)
+        words += email.html_as_text.split()
 
     # Remove non-alphanumeric values
     words = [word for word in words if word.isalpha()]
