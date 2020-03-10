@@ -10,7 +10,7 @@ from katatasso.helpers.extraction import get_file_paths
 
 DATAPATH = CLF_TRAININGDATA_PATH
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../../../../../tagserver/templates')
 
 def load_emails():
     files = [ fp.replace(DATAPATH, '') for fp in os.listdir(DATAPATH) ]
