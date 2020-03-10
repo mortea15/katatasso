@@ -14,3 +14,4 @@ CATEGORIES = {
 FP_MODEL = os.getenv('CLF_MODEL_PATH', 'model.pkl')
 CLF_DICT_NUM = int(os.getenv('CLF_DICT_NUM', 5000))
 CLF_TRAININGDATA_PATH = os.getenv('CLF_TRAININGDATA_PATH', 'trainingdata/emails/')
+DBFILE = 'tagger.db'
