@@ -1,0 +1,32 @@
+<html>
+    <head>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <div width="60%">
+            <center>
+                <h1>{{ appname }}</h1>
+                <hr>
+                <table class="pure-table pure-table-horizontal">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Path</th>
+                            <th>Tag</th>
+                        </tr>
+                    </thead>
+                    {% if tags %}
+                        {% for tag in tags %}
+                            <tr>
+                                <th>{{tag[0]}}</th>
+                                <td><a href="/show/{{tag[1]}}">{{ tag[1] }}</a></td>
+                                <td> {{ tag[2] }} </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
+            </center>
+        </div>
+    </body>
+</html>
