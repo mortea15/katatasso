@@ -50,5 +50,6 @@ setup(
     packages=['katatasso', 'katatasso.modules', 'katatasso.helpers', 'katatasso.tests'], #find_packages(),
     classifiers=classifiers,
     zip_safe=False,
-    entry_points={'console_scripts': ['katatasso = katatasso.__main__:main', 'katag = katatasso.modules.tagger:run_server']}
+    entry_points={'console_scripts': ['katatasso = katatasso.__main__:main', 'katag = katatasso.modules.tagger:run_server']},
+    data_files=[('tagserver/templates', ['katatasso/modules/templates/index.html','katatasso/modules/templates/email.html'])]
 )
