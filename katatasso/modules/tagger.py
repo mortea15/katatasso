@@ -5,10 +5,10 @@ import sys
 import emailyzer
 from flask import Flask, redirect, render_template, request
 
-from katatasso.helpers.const import CATEGORIES
+from katatasso.helpers.const import CATEGORIES, DBFILE, CLF_TRAININGDATA_PATH
 from katatasso.helpers.extraction import get_file_paths
 
-DATAPATH = os.getenv('CLF_TRAININGDATA_PATH', 'trainingdata/')
+DATAPATH = CLF_TRAININGDATA_PATH
 
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def load_emails():
     return files
 
 def create_conn():
-    return sqlite3.connect('tagger.db')
+    return sqlite3.connect(DBFILE)
 
 def init_db():
     conn = create_conn()
@@ -109,10 +109,11 @@ def receive_tag():
         return '201 donkey needs a nap'
 
 def run_server():
-    if not os.path.isfile('tagger.db'):
+    if not os.path.isfile(DBFILE):
         print('DB not present. Creating..')
         init_db()
     else:
+        print('Missing files in DB. Adding..')
         add_missing_tags()
 
     app.run()
