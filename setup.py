@@ -50,5 +50,5 @@ setup(
     packages=['katatasso', 'katatasso.modules', 'katatasso.helpers', 'katatasso.tests'], #find_packages(),
     classifiers=classifiers,
     zip_safe=False,
-    entry_points={'console_scripts': ['katatasso = katatasso.__main__:main']}
+    entry_points={'console_scripts': ['katatasso = katatasso.__main__:main', 'katag = katatasso.modules.tagger:run_server']}
 )
