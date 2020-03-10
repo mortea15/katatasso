@@ -1,10 +1,25 @@
 #!/usr/bin/env python3
 import os
+import sqlite3
+import sys
 from collections import Counter
 
-from katatasso.helpers.const import CLF_DICT_NUM, CLF_TRAININGDATA_PATH
+from katatasso.helpers.const import CLF_DICT_NUM, CLF_TRAININGDATA_PATH, DBFILE
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import progress_bar
+
+
+def get_all_tags():
+    try:
+        conn = sqlite3.connect(DBFILE)
+        c = conn.cursor()
+        c.execute('SELECT filename, tag FROM tags')
+        res = c.fetchall()
+        return res
+    except Exception as e:
+        logger.error(f'Unable to fetch tags from database:')
+        logger.error(e)
+        sys.exit(2)
 
 
 # Get the file paths
