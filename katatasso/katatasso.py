@@ -5,7 +5,7 @@ import sys
 
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.modules.classifier import classify
-from katatasso.modules.trainer import train
+from katatasso.modules.trainer import train, trainv2
 
 try:
     import sklearn

@@ -2,5 +2,5 @@
 # -*- coding: utf-8 -*-
 
 from .katatasso import (
-    classify, train
+    classify, train, trainv2
 )
