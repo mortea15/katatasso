@@ -1,6 +1,8 @@
 # katatasso
 *κατατάσσω - classify*
 
+*katatasso* is a multi-class email classifier written in Python using scikit-learn.
+
 ## Installation
 **Optional: Create a virtual environment**
 ```bash
