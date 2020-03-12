@@ -1,45 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sqlite3
 import sys
 
-import emailyzer
+import numpy as np
 
-from katatasso.helpers.const import (CATEGORIES, CLF_TRAININGDATA_PATH, DBFILE,
-                                     FP_MODEL)
-from katatasso.helpers.extraction import (get_all_tags, get_file_paths,
-                                          make_dictionary)
+from katatasso.helpers.const import FP_MODEL
+from katatasso.helpers.extraction import (create_dataframe, make_dataset,
+                                          make_dictionary, process_dataframe)
 from katatasso.helpers.logger import rootLogger as logger
-from katatasso.helpers.utils import progress_bar, save_model
+from katatasso.helpers.utils import save_model
 
 try:
-    from sklearn.metrics import accuracy_score
+    from sklearn.metrics import accuracy_score, confusion_matrix
     from sklearn.model_selection import train_test_split as TTS
     from sklearn.naive_bayes import MultinomialNB
+    from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 except ModuleNotFoundError:
     logger.error(f'Module scikit-learn not found. Please install before proceeding.')
     sys.exit(2)
 
 
-# Create a data set for the classification
-def make_dataset(dictionary):
-    features = []
-    labels = []
-    tags = get_all_tags()
-    if tags:
-        logger.info(f'Creating dataset from {len(tags)} files')
-        for filename, tag in progress_bar(tags):
-            filepath = CLF_TRAININGDATA_PATH + filename
-            data = []
-            email = emailyzer.from_file(filepath)
-            words = email.html_as_text.split()
+def trainv2():
+    df = create_dataframe()
+    counts, df = process_dataframe(df)
 
-            for entry in dictionary:
-                data.append(words.count(entry[0]))
-            features.append(data)
-            labels.append(tag)
-        
-    return features, labels
+    x_train, x_test, y_train, y_test = TTS(counts, df['label'], test_size=0.3)
+    model = MultinomialNB().fit(x_train, y_train)
+    predicted = model.predict(x_test)
+    print(f'{accuracy_score(y_test, predicted) * 100}%')
+    print(f'{np.mean(predicted == y_test) * 100}%')
+    logger.debug(f'Confusion Matrix:\n{confusion_matrix(y_test, predicted)}')
+    save_model(model, FP_MODEL)
 
 
 def train():
@@ -48,9 +39,11 @@ def train():
 
     x_train, x_test, y_train, y_test = TTS(features, labels, test_size=0.3)
 
-    clf = MultinomialNB()
-    clf.fit(x_train, y_train)
+    model = MultinomialNB()
+    model.fit(x_train, y_train)
 
-    preds = clf.predict(x_test)
-    logger.info(f'Accuracy Score: {accuracy_score(y_test, preds)}')
-    save_model(clf, FP_MODEL)
+    predicted = model.predict(x_test)
+    print(f'{accuracy_score(y_test, predicted) * 100}%')
+    print(f'{np.mean(predicted == y_test) * 100}%')
+    logger.debug(f'Confusion Matrix:\n{confusion_matrix(y_test, predicted)}')
+    save_model(model, FP_MODEL)
