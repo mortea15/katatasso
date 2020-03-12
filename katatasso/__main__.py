@@ -5,7 +5,7 @@ import os
 import sys
 
 import katatasso
-from katatasso.helpers.logger import increase_log_level
+from katatasso.helpers.logger import increase_log_level, log_to_file
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import prepare_result
 
@@ -14,7 +14,7 @@ APPNAME = 'katatasso'
 
 
 INDENT = '  '
-HELPMSG = f'''usage: {APPNAME} [-h] (-f INPUT_FILE | -s) [-t] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v]
+HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
 
     {INDENT * 1}-f, --infile        {INDENT * 2}Extract entities from file
     {INDENT * 1}-s, --stdin         {INDENT * 2}Extract entities from STDIN
@@ -26,8 +26,9 @@ HELPMSG = f'''usage: {APPNAME} [-h] (-f INPUT_FILE | -s) [-t] [-c] [-d FORMAT] [
     {INDENT * 1}-d, --format        {INDENT * 2}Output results as this format.
                               Available formats: [plain (default), json]
 
-    {INDENT * 1}-v, --verbose       {INDENT * 2}Increase verbosity (can be used twice, e.g. -vv)
-    {INDENT * 1}-h, --help          {INDENT * 2}Print this message
+    {INDENT * 1}-v, --verbose       {INDENT * 2}Increase verbosity (can be used several times, e.g. -vvv)
+    {INDENT * 1}-l, --log-file      {INDENT * 2}Write log events to the file `{APPNAME}.log`
+    {INDENT * 1}--help              {INDENT * 2}Print this message
 '''
 
 
@@ -45,7 +46,7 @@ def main():
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hf:stco:d:v', ['help', 'infile=', 'stdin', 'train', 'classify', 'outfile=', 'format=', 'verbose'])
+        opts, args = getopt.getopt(argv, 'hf:st:co:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify', 'outfile=', 'format=', 'verbose'])
     except getopt.GetoptError:
         print(HELPMSG)
         sys.exit(2)
@@ -58,12 +59,20 @@ def main():
     Increase verbosity
     """
     opts_v = len(list(filter(lambda opt: opt == ('-v', ''), opts)))
-    if opts_v > 2:
-        opts_v = 2
+    if opts_v > 4:
+        opts_v = 4
     v = 0
     while v < opts_v:
         increase_log_level()
         v += 1
+    
+    """
+    Log to file
+    """
+    if v > 0:
+        enable_logfile = list(filter(lambda opt: opt[0] in ('-l', '--log-file'), opts))
+        if enable_logfile:
+            log_to_file()
     
     for opt, arg in opts:
         if opt == '--help':
@@ -90,8 +99,14 @@ def main():
                 logger.error(e)
                 sys.exit(2)
         elif opt in ('-t', '--train'):
+            logger.debug(f'ACTION: Creating model from dataset')
+            if arg == 'v1':
                 katatasso.train()
-                logger.debug(f'ACTION: Creating model from dataset')
+            elif arg == 'v2':
+                katatasso.trainv2()
+            else:
+                logger.error(f'Please specify either `v1` or `v2`.\nE.g. `katatasso -t v2`')
+                sys.exit(2)
         elif opt in ('-c', '--classify'):
             if TEXT:
                 logger.debug(f'ACTION: Classifying input')
