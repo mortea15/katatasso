@@ -21,27 +21,29 @@ $ pip3 install git+ssh://git@github.com/mortea15/katatasso.git
 ## Usage
 **Set env vars**
 ```bash
+$ cp env.vars.example env.vars
 $ vim env.vars
 $ source env.vars
 ```
-
-### Tag training data
+### CLI
+#### Tag training data
 **Run the server**
 1. `$ katag`
 2. Open `localhost:5000` in your browser
 3. Tag emails
 
-### Train the model
+#### Train the model
 ```bash
 $ katatasso -t
 ```
 
-### Classify
+#### Classify
 ```bash
 $ katatasso -f <FILENAME> -c
 $ cat <FILENAME> | katatasso -s -c
 ```
 
+#### Help
 ```
 $ katatasso --help
 usage: katatasso [-h] (-f INPUT_FILE | -s) [-t] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v]
