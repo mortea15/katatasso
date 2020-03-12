@@ -6,8 +6,8 @@ __contact__ = 'm.amundsen@sportradar.com'
 
 from setuptools import find_packages, setup
 
-version = '0.0.1'
-long_desc = '''katatasso -- a Machine Learning classifier for email.
+version = '0.1.0'
+long_desc = '''katatasso -- is a multi-class email classifier written in Python using scikit-learn.
 '''.lstrip()
 
 classifiers = [
@@ -43,7 +43,7 @@ setup(
     long_description=long_desc,
     long_description_content_type='text/markdown',
     install_requires=requires,
-    dependency_links=['git+ssh://git@github.com/mortea15/emailyzer.git'],
+    dependency_links=['git+ssh://git@github.com/mortea15/emailyzer.git', 'git+ssh://git@github.com/mortea15/juicer.git'],
     url='https://github.com/mortea15/katatasso.git',
     author=__author__,
     author_email=__contact__,
