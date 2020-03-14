@@ -10,13 +10,14 @@ import pandas as pd
 
 from katatasso.helpers.const import CLF_DICT_NUM, CLF_TRAININGDATA_PATH, DBFILE
 from katatasso.helpers.logger import rootLogger as logger
-from katatasso.helpers.utils import progress_bar
+from katatasso.helpers.utils import progress_bar, save_vectorizer, load_vectorizer
 
 try:
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 except ModuleNotFoundError:
-    logger.error(f'Module scikit-learn not found. Please install before proceeding.')
+    logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
     sys.exit(2)
+
 
 def get_all_tags():
     try:
@@ -26,7 +27,7 @@ def get_all_tags():
         res = c.fetchall()
         return res
     except Exception as e:
-        logger.error(f'Unable to fetch tags from database:')
+        logger.critical(f'Unable to fetch tags from database.')
         logger.error(e)
         sys.exit(2)
 
@@ -48,10 +49,10 @@ def make_dataset(dictionary):
     labels = []
     tags = get_all_tags()
     if tags:
-        logger.info(f'Creating dataset from {len(tags)} files')
+        logger.debug(f'Creating dataset from {len(tags)} files')
         for filename, tag in progress_bar(tags):
-            filepath = CLF_TRAININGDATA_PATH + filename
             data = []
+            filepath = CLF_TRAININGDATA_PATH + filename
             email = emailyzer.from_file(filepath)
             content = email.html_as_text
             words = juicer.process_text(content, ner=False)
@@ -67,7 +68,7 @@ def make_dataset(dictionary):
 def make_dictionary():
     tags = get_all_tags()
     words = []
-    logger.info('Creating dictionary..')
+    logger.debug('Creating dictionary..')
     for filename, tag in progress_bar(tags):
         filepath = CLF_TRAININGDATA_PATH + filename
         email = emailyzer.from_file(filepath)
@@ -84,9 +85,9 @@ def make_dictionary():
 
 def create_dataframe():
     labels = []
+    contents = []
     tags = get_all_tags()
     if tags:
-        contents = []
         for filename, tag in progress_bar(tags):
             filepath = CLF_TRAININGDATA_PATH + filename
             # Preprocessing
@@ -95,7 +96,6 @@ def create_dataframe():
             # Lemmatize, remove stopwords
             words = juicer.process_text(content, ner=False)
             text = ' '.join(words)
-
             contents.append(text)
             labels.append(tag)
         df = pd.DataFrame(list(zip(labels, contents)), columns = ['label', 'message'])
@@ -108,10 +108,26 @@ def process_dataframe(df):
     df['message'] = df.message.str.replace('[^\w\s]', '')
 
     # Count occurrences
-    cntVect = CountVectorizer()
-    counts = cntVect.fit_transform(df['message'])
+    vectorizer = CountVectorizer()
+    counts = vectorizer.fit_transform(df['message'])
+    save_vectorizer(vectorizer)
     # Term Frequency Inverse Document Frequency
     transformer = TfidfTransformer().fit(counts)
     counts = transformer.transform(counts)
 
     return counts, df
+
+
+def get_tfidf_counts(input):
+    words = juicer.process_text(input, ner=False)
+    text = ' '.join(words)
+    text = text.lower()
+    text = text.replace('[^\w\s]', '')
+
+    vectorizer = load_vectorizer()
+    counts = vectorizer.transform([text])
+
+    # Term Frequency Inverse Document Frequency
+    transformer = TfidfTransformer().fit(counts)
+    counts = transformer.transform(counts)
+    return counts
