@@ -5,13 +5,8 @@ import sys
 
 import tqdm
 
+from katatasso.helpers.const import FP_MODEL
 from katatasso.helpers.logger import rootLogger as logger
-
-
-def prepare_result(output):
-    # TODO Convert to JSON if json
-    result = output
-    return result
 
 
 def progress_bar(it):
@@ -20,26 +15,51 @@ def progress_bar(it):
     else:
         return it
 
-# Save the classifier
-def save_model(clf, name):
+
+def __save_obj(obj, filepath):
     try:
-        with open(name, 'wb') as f:
-            pickle.dump(clf, f)
-        logger.info(f'Pickled model saved to {name}')
+        with open(filepath, 'wb') as f:
+            pickle.dump(obj, f)
+        logger.debug(f'Pickled object `{filepath}` saved to disk.')
     except Exception as e:
-        logger.warn('An unexpected error occurred while saving the model.')
+        logger.critical(f'An unexpected error occurred while saving the object `{filepath}`.')
         logger.error(e)
 
-# Load the classifier
-def load_model(clf_path):
+
+def __load_obj(filepath):
     try:
-        with open(clf_path, 'rb') as f:
-            clf = pickle.load(f, encoding='latin1')
-        logger.info(f'Pickled model loaded from {clf_path}')
-        return clf
+        with open(filepath, 'rb') as f:
+            obj = pickle.load(f, encoding='latin1')
+        logger.debug(f'Pickled object loaded from `{filepath}`.')
+        return obj
     except FileNotFoundError:
-        logger.error(f'Pickled model `{clf_path}` was not found. Exiting.')
+        logger.critical(f'Pickled object `{filepath}` was not found. Exiting.')
         sys.exit(2)
     except Exception as e:
-        logger.warn('An unexpected error occurred while loading the model.')
+        logger.critical(f'An unexpected error occurred while loading the object `{filepath}`.')
         logger.error(e)
+        sys.exit(2)
+
+
+def save_model(model):
+    __save_obj(model, FP_MODEL)
+
+
+def load_model():
+    return __load_obj(FP_MODEL)
+
+
+def save_y_test(y_test):
+    __save_obj(y_test, f'y_test-{FP_MODEL}')
+
+
+def load_y_test():
+    return __load_obj(f'y_test-{FP_MODEL}')
+
+
+def save_vectorizer(vectorizer):
+    __save_obj(vectorizer, f'vectorizer-{FP_MODEL}')
+
+
+def load_vectorizer():
+    return __load_obj(f'vectorizer-{FP_MODEL}')
