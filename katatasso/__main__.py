@@ -142,7 +142,6 @@ def main():
             fname = f'{outfile}.{ext}'
             if outformat == 'plain':
                 result['accuracy'] = int(result.get('accuracy'))
-                print(result)
                 with open(fname, 'w') as f:
                     f.write('\n'.join(list(result.values())))
             elif outformat == 'json':
