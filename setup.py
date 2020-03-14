@@ -6,7 +6,7 @@ __contact__ = 'm.amundsen@sportradar.com'
 
 from setuptools import find_packages, setup
 
-version = '0.1.0'
+version = '0.2.0'
 long_desc = '''katatasso -- is a multi-class email classifier written in Python using scikit-learn.
 '''.lstrip()
 
