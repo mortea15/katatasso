@@ -20,8 +20,20 @@ except ModuleNotFoundError:
 
 
 def classify(text):
-    """
-    word vector counts
+    """Classify the text using a Multinomial Naive Bayes model with
+        word vector counts
+
+        Parameters
+        ----------
+        text : str
+            The text input to classify
+
+        Returns
+        -------
+        category : int
+            Predicted category for the text
+        accuracy : float
+            The accuracy classification score
     """
     clf = load_model()
     y_test = load_y_test()
@@ -35,12 +47,26 @@ def classify(text):
     accuracy = accuracy_score([y_test[0]], predicted) * 100
     logger.info(f'     Accuracy: {accuracy  * 100}%')
     logger.info(f'     Accuracy: {np.mean(predicted == [y_test[0]]) * 100}%')
-    return predicted[0], accuracy
+    category = int(predicted[0])
+    accuracy = float(accuracy)
+    return category, accuracy
 
 
 def classifyv2(text):
-    """
-    tf-idf vectors
+    """Classify the text using a Multinomial Naive Bayes model with
+        TF-IDF (Term Frequency Inverse Document Frequency) vectors
+
+        Parameters
+        ----------
+        text : str
+            The text input to classify
+
+        Returns
+        -------
+        category : int
+            Predicted category for the text
+        accuracy : float
+            The accuracy classification score
     """
     clf = load_model()
     y_test = load_y_test()
@@ -51,4 +77,6 @@ def classifyv2(text):
     accuracy = accuracy_score(y_test.head(1), predicted) * 100
     logger.info(f'     Accuracy: {accuracy  * 100}%')
     logger.info(f'     Accuracy: {np.mean(predicted == y_test.head(1)) * 100}%')
-    return predicted[0], accuracy
+    category = int(predicted[0])
+    accuracy = float(accuracy)
+    return category, accuracy
