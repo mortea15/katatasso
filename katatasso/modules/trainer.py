@@ -6,12 +6,12 @@ import numpy as np
 
 from katatasso.helpers.const import FP_MODEL
 from katatasso.helpers.extraction import (create_dataframe, make_dataset,
-                                          make_dictionary, process_dataframe)
+                                          make_dictionary, process_dataframe, normalize)
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import save_model, save_y_test
 
 try:
-    from sklearn.metrics import accuracy_score, confusion_matrix
+    from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
     from sklearn.model_selection import train_test_split as TTS
     from sklearn.naive_bayes import MultinomialNB
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -20,11 +20,23 @@ except ModuleNotFoundError:
     sys.exit(2)
 
 
-def train():
+def train(norm=False):
+    """Train a model using Multinomial Naive Bayes with word vector counts
+
+        Parameters
+        ----------
+        norm : bool
+            Whether to normalize the data.
+
+        Returns
+        -------
+    """
     dictionary = make_dictionary()
     features, labels = make_dataset(dictionary)
 
     x_train, x_test, y_train, y_test = TTS(features, labels, test_size=0.3)
+    if norm:
+        x_train, x_test = normalize(x_train, x_test)
 
     model = MultinomialNB()
     model.fit(x_train, y_train)
@@ -33,15 +45,28 @@ def train():
     print(f'Accuracy: {accuracy_score(y_test, predicted) * 100}%')
     logger.debug(f'     Accuracy: {np.mean(predicted == y_test) * 100}%')
     logger.debug(f'     Confusion Matrix:\n{confusion_matrix(y_test, predicted)}')
+    logger.debug(classification_report(y_test, predicted, zero_division=1))
     save_model(model)
     save_y_test(y_test)
 
 
-def trainv2():
+def trainv2(norm=False):
+    """Train a model using Multinomial Naive Bayes with TF-IDF (Term Frequency Inverse Document Frequency) vectors
+
+        Parameters
+        ----------
+        norm : bool
+            Whether to normalize the data.
+
+        Returns
+        -------
+    """
     df = create_dataframe()
     counts, df = process_dataframe(df)
     # messages_train, messages_test, labels_train, labels_test
     x_train, x_test, y_train, y_test = TTS(counts, df['label'], test_size=0.3)
+    if norm:
+        x_train, x_test = normalize(x_train, x_test)
 
     model = MultinomialNB()
     model.fit(x_train, y_train)
@@ -50,5 +75,6 @@ def trainv2():
     print(f'Accuracy: {accuracy_score(y_test, predicted) * 100}%')
     logger.debug(f'     Accuracy: {np.mean(predicted == y_test) * 100}%')
     logger.debug(f'     Confusion Matrix:\n{confusion_matrix(y_test, predicted)}')
+    logger.debug(classification_report(y_test, predicted, zero_division=1))
     save_model(model)
     save_y_test(y_test)
