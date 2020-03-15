@@ -13,6 +13,7 @@ from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import progress_bar, save_vectorizer, load_vectorizer
 
 try:
+    from sklearn.preprocessing import StandardScaler
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 except ModuleNotFoundError:
     logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
@@ -131,3 +132,12 @@ def get_tfidf_counts(input):
     transformer = TfidfTransformer().fit(counts)
     counts = transformer.transform(counts)
     return counts
+
+def normalize(x_train, x_test):
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    return x_train, x_test
