@@ -3,22 +3,33 @@
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
-    <body>
+    <body style="background-color:black;color:white;">
         <div class="pure-g">
             <div class="pure-u-1-2">
                 <center>
                     <h3>{{ email.subject }}</h3>
                     <h4>{{ email.sender }}</h4>
+                    <h5>{{ email.headers['To'] }}</h5>
                 </center>
                 <hr>
                 <ul>
                     <li><b>Sender mismatch:</b> {{ email.sender_domain != email.envelope_domain }}</li>
+                    <li><b>Envelope domain:</b> <a href="http://{{ email.envelope_domain }}">{{ email.envelope_domain }}</a></li>
                     <li><b>Attachments:    </b> {{ True if email.attachments else False }}</li>
                 </ul>
                 <center>
                     <div style="width:60%;">{{ email.html_as_text }}</div>
                 </center>
                 <hr>
+                {% if email.attachments %}
+                    <ul>
+                        <b>Attachments</b>
+                        {% for a in email.attachments %}
+                            <li>{{a['filename']}} => {{a['filetype']}}</li>
+                        {% endfor %}
+                    </ul>
+                    <hr>
+                {% endif %}
                 <ul>
                     <b>Hosts</b>
                     {% for i in email.hosts %}
@@ -38,14 +49,14 @@
                         <b>Current tag:</b> {{ cat }}
                         <form action='/tag' method='POST'>
                             <input type='hidden' id='filename' name='filename' value='{{ tag[1] }}'/>
-                            <button id='cat' name='cat' style="width:150px" value="0">Legitimate</button>
-                            <button id='cat' name='cat' style="width:150px" value="1">Spam</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="0">Legitimate</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="1">Spam</button>
                             <br>
-                            <button id='cat' name='cat' style="width:150px" value="2">Phishing</button>
-                            <button id='cat' name='cat' style="width:150px" value="3">Malware</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="2">Phishing</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="3">Malware</button>
                             <br>
-                            <button id='cat' name='cat' style="width:150px" value="4">Fraud</button>
-                            <button id='cat' name='cat' style="width:150px" value="5">Unclassified</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="4">Fraud</button>
+                            <button id='cat' name='cat' style="width:150px;color:black;" value="5">Unclassified</button>
                         </form>
                     </div>
                 </center>
