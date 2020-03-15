@@ -14,22 +14,28 @@ APPNAME = 'katatasso'
 
 
 INDENT = '  '
-HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t (v1 | v2)] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
+HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t (v1 | v2) [-n]] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
+    Input:
+    {INDENT * 1}-f, --infile        {INDENT * 2}Extract entities from file.
+    {INDENT * 1}-s, --stdin         {INDENT * 2}Extract entities from STDIN.
 
-    {INDENT * 1}-f, --infile        {INDENT * 2}Extract entities from file
-    {INDENT * 1}-s, --stdin         {INDENT * 2}Extract entities from STDIN
+    Options:
+    {INDENT * 1}-n, --normalize     {INDENT * 2}Normalize the data.
 
+    Action:
     {INDENT * 1}-t, --train         {INDENT * 2}Train and create a model for classification. Specify either `v1` or `v2` as arg.
     {INDENT * 1}-c, --classify      {INDENT * 2}Classify the text. Specify either `v1` or `v2` as arg,
                               depending on what mode was used for training.
 
-    {INDENT * 1}-o, --outfile       {INDENT * 2}Output results to this file
+    Output:
+    {INDENT * 1}-o, --outfile       {INDENT * 2}Output results to this file.
     {INDENT * 1}-d, --format        {INDENT * 2}Output results as this format.
                               Available formats: [plain (default), json]
 
-    {INDENT * 1}-v, --verbose       {INDENT * 2}Increase verbosity (can be used several times, e.g. -vvv)
-    {INDENT * 1}-l, --log-file      {INDENT * 2}Write log events to the file `{APPNAME}.log`
-    {INDENT * 1}--help              {INDENT * 2}Print this message
+    General options:
+    {INDENT * 1}-v, --verbose       {INDENT * 2}Increase verbosity (can be used several times, e.g. -vvv).
+    {INDENT * 1}-l, --log-file      {INDENT * 2}Write log events to the file `{APPNAME}.log`.
+    {INDENT * 1}--help              {INDENT * 2}Print this message.
 '''
 
 
@@ -47,7 +53,7 @@ def main():
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hf:st:c:o:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify=', 'outfile=', 'format=', 'verbose'])
+        opts, args = getopt.getopt(argv, 'hf:st:c:no:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify=', 'normalize', 'outfile=', 'format=', 'verbose'])
     except getopt.GetoptError:
         print(HELPMSG)
         sys.exit(2)
@@ -141,7 +147,6 @@ def main():
             ext = 'json' if outformat == 'json' else 'txt'
             fname = f'{outfile}.{ext}'
             if outformat == 'plain':
-                result['accuracy'] = int(result.get('accuracy'))
                 with open(fname, 'w') as f:
                     f.write('\n'.join(list(result.values())))
             elif outformat == 'json':
@@ -151,7 +156,8 @@ def main():
             logger.debug(f'Results saved to file `{fname}`')
             sys.exit(0)
         else:
-            print(result)
+            for k,v in result.items():
+                print(f'{k}: {v}')
             sys.exit(0)
 
 
