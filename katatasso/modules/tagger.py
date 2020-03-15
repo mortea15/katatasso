@@ -79,10 +79,18 @@ def get_next(filename):
 
 @app.route('/', methods=['GET'])
 def index():
+    tags = load_tags()
+    tagstats = {}
+    for tag, cat in CATEGORIES.items():
+        tagstats[tag] = { 'count': 0, 'category': cat }
+    for tag in tags:
+        tagstats[tag[2]]['count'] += 1
     return render_template(
         'index.html',
         appname = 'katatasso tagger',
-        tags = load_tags()
+        tags = tags,
+        tagstats = tagstats,
+        total = len(tags)
     )
 
 @app.route('/show/<filename>', methods=['GET'])
