@@ -14,13 +14,14 @@ APPNAME = 'katatasso'
 
 
 INDENT = '  '
-HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t (v1 | v2) [-n]] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
+HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t (v1 | v2) [-n] [-p]] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
     Input:
     {INDENT * 1}-f, --infile        {INDENT * 2}Extract entities from file.
     {INDENT * 1}-s, --stdin         {INDENT * 2}Extract entities from STDIN.
 
     Options:
     {INDENT * 1}-n, --normalize     {INDENT * 2}Normalize the data.
+    {INDENT * 1}-p, --privacy       {INDENT * 2}Use a differentially private Naive Bayes classifier.
 
     Action:
     {INDENT * 1}-t, --train         {INDENT * 2}Train and create a model for classification. Specify either `v1` or `v2` as arg.
@@ -53,7 +54,7 @@ def main():
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hf:st:c:no:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify=', 'normalize', 'outfile=', 'format=', 'verbose'])
+        opts, args = getopt.getopt(argv, 'hf:st:c:npo:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify=', 'normalize', 'privacy', 'outfile=', 'format=', 'verbose'])
     except getopt.GetoptError:
         print(HELPMSG)
         sys.exit(2)
@@ -106,12 +107,24 @@ def main():
                 logger.critical(f'An error occurred while reading from stdin.')
                 logger.error(e)
                 sys.exit(2)
+        elif opt in ('-n', '--normalize'):
+            logger.debug(f'OPTION: Normalizing data.')
+            CONFIG['normalize'] = True
+        elif opt in ('-p', '--privacy'):
+            logger.debug('OPTION: Using differential privacy.')
+            CONFIG['privacy'] = True
         elif opt in ('-t', '--train'):
             logger.debug(f'ACTION: Creating model from dataset')
             if arg == 'v1':
-                katatasso.train()
+                katatasso.train(
+                    norm=CONFIG.get('normalize', False),
+                    privacy=CONFIG.get('privacy', False)
+                )
             elif arg == 'v2':
-                katatasso.trainv2()
+                katatasso.trainv2(
+                    norm=CONFIG.get('normalize', False),
+                    privacy=CONFIG.get('privacy', False)
+                )
             else:
                 logger.critical(f'Please specify either `v1` or `v2`. E.g. `katatasso -t v2`')
                 sys.exit(2)
