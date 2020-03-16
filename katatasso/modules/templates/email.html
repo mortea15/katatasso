@@ -39,7 +39,16 @@
                 <hr>
                 <ul>
                 {% for k,v in email.headers.items() %}
-                    <li><b>{{ k }}:</b> {{ v }}</li>
+                    {% if v.append %}
+                        <li><b>{{ k }}:</b></li>
+                        <ul>
+                            {% for val in v %}
+                                <li>{{ val }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <li><b>{{ k }}:</b> {{ v }}</li>
+                    {% endif %}
                 {% endfor %}
                 </ul>
             </div>
