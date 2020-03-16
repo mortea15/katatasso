@@ -24,9 +24,9 @@
                     {% if tagstats %}
                         {% for tag, stats in tagstats.items() %}
                             <tr>
-                                <th>{{tag}}</th>
-                                <td>{{stats.get('count')}}</td>
-                                <td>{{stats.get('category')}}</td>
+                                <th>{{ tag }}</th>
+                                <td>{{ stats.get('count') }}</td>
+                                <td>{{ stats.get('category') }}</td>
                             </tr>
                         {% endfor %}
                     {% endif %}
@@ -43,8 +43,8 @@
                     {% if tags %}
                         {% for tag in tags %}
                             <tr>
-                                <th>{{tag[0]}}</th>
-                                <td><a href="/show/{{tag[1]}}">{{ tag[1] }}</a></td>
+                                <th>{{ tag[0] }}</th>
+                                <td><a href="/show/{{ tag[1] }}">{{ tag[1] }}</a></td>
                                 <td> {{ tag[2] }} </td>
                             </tr>
                         {% endfor %}
