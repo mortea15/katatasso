@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 import sys
 
-import numpy as np
-
 from katatasso.helpers.const import FP_MODEL
 from katatasso.helpers.extraction import (create_dataframe, make_dataset,
-                                          make_dictionary, process_dataframe, normalize)
+                                          make_dictionary, normalize,
+                                          process_dataframe)
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import save_model, save_y_test
 
@@ -15,18 +14,22 @@ try:
     from sklearn.model_selection import train_test_split as TTS
     from sklearn.naive_bayes import MultinomialNB
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-except ModuleNotFoundError:
-    logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
+    from diffprivlib.models import GaussianNB as PrivateNB
+    import numpy as np
+except ModuleNotFoundError as e:
+    logger.critical(f'Module `{e.name}` not found. Please install before proceeding.')
     sys.exit(2)
 
 
-def train(norm=False):
+def train(norm=False, privacy=False):
     """Train a model using Multinomial Naive Bayes with word vector counts
 
         Parameters
         ----------
         norm : bool
             Whether to normalize the data.
+        privacy : bool
+            Whether to use a differentially private Naive Bayes classifier.
 
         Returns
         -------
@@ -38,7 +41,10 @@ def train(norm=False):
     if norm:
         x_train, x_test = normalize(x_train, x_test)
 
-    model = MultinomialNB()
+    if privacy:
+        model = PrivateNB(epsilon=0.5)
+    else:
+        model = MultinomialNB()
     model.fit(x_train, y_train)
 
     predicted = model.predict(x_test)
@@ -50,13 +56,15 @@ def train(norm=False):
     save_y_test(y_test)
 
 
-def trainv2(norm=False):
+def trainv2(norm=False, privacy=False):
     """Train a model using Multinomial Naive Bayes with TF-IDF (Term Frequency Inverse Document Frequency) vectors
 
         Parameters
         ----------
         norm : bool
             Whether to normalize the data.
+        privacy : bool
+            Whether to use a differentially private naive Bayes classifier.
 
         Returns
         -------
@@ -67,8 +75,10 @@ def trainv2(norm=False):
     x_train, x_test, y_train, y_test = TTS(counts, df['label'], test_size=0.3)
     if norm:
         x_train, x_test = normalize(x_train, x_test)
-
-    model = MultinomialNB()
+    if privacy:
+        model = PrivateNB(epsilon=0.5)
+    else:
+        model = MultinomialNB()
     model.fit(x_train, y_train)
 
     predicted = model.predict(x_test)
