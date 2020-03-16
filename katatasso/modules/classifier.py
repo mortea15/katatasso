@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 import sys
 
-import juicer
-import numpy as np
-import pandas as pd
-
 from katatasso.helpers.const import CATEGORIES
-from katatasso.helpers.extraction import make_dictionary, process_dataframe, get_tfidf_counts
+from katatasso.helpers.extraction import (get_tfidf_counts, make_dictionary,
+                                          process_dataframe)
 from katatasso.helpers.logger import rootLogger as logger
 from katatasso.helpers.utils import load_model, load_y_test
 
 try:
     from sklearn.metrics import accuracy_score
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-except ModuleNotFoundError:
-    logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
+    import juicer
+    import numpy as np
+    import pandas as pd
+except ModuleNotFoundError as e:
+    logger.critical(f'Module `{e.name}` not found. Please install before proceeding.')
     sys.exit(2)
 
 

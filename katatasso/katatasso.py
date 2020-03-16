@@ -9,6 +9,6 @@ from katatasso.modules.trainer import train, trainv2
 
 try:
     import sklearn
-except ModuleNotFoundError:
-    logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
+except ModuleNotFoundError as e:
+    logger.critical(f'Module `{e.name}` not found. Please install before proceeding.')
     sys.exit(2)

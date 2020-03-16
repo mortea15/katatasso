@@ -4,19 +4,19 @@ import sqlite3
 import sys
 from collections import Counter
 
-import emailyzer
-import juicer
-import pandas as pd
-
 from katatasso.helpers.const import CLF_DICT_NUM, CLF_TRAININGDATA_PATH, DBFILE
 from katatasso.helpers.logger import rootLogger as logger
-from katatasso.helpers.utils import progress_bar, save_vectorizer, load_vectorizer
+from katatasso.helpers.utils import (load_vectorizer, progress_bar,
+                                     save_vectorizer)
 
 try:
     from sklearn.preprocessing import StandardScaler
     from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-except ModuleNotFoundError:
-    logger.critical(f'Module scikit-learn not found. Please install before proceeding.')
+    import emailyzer
+    import juicer
+    import pandas as pd
+except ModuleNotFoundError as e:
+    logger.critical(f'Module `{e.name}` not found. Please install before proceeding.')
     sys.exit(2)
 
 
@@ -134,7 +134,7 @@ def get_tfidf_counts(input):
     return counts
 
 def normalize(x_train, x_test):
-    scaler = StandardScaler()
+    scaler = StandardScaler(with_mean=False)
     scaler.fit(x_train)
 
     x_train = scaler.transform(x_train)
