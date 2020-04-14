@@ -12,38 +12,57 @@ DATAPATH = CLF_TRAININGDATA_PATH
 
 app = Flask(__name__, template_folder='../../../../../tagserver/templates')
 
+phishing_dir = DATAPATH + 'phishing/'
+spam_dir = DATAPATH + 'spam/'
+legit_dir = DATAPATH + 'legitimate/'
+emails = []
+
 def load_emails():
-    files = [ fp.replace(DATAPATH, '') for fp in os.listdir(DATAPATH) if fp.endswith('.msg') or fp.endswith('.eml') ]
-    return files
+    """
+    Load emails from the specified directory.
+        Untagged emails in root dir
+        Subdirs for `phishing`, `spam`, and `legitimate`
+    """
+    legit = [ (legit_dir + fname, 0) for fname in os.listdir(legit_dir) ]
+    spam = [ (spam_dir + fname, 1) for fname in os.listdir(spam_dir) ]
+    phish = [ (phishing_dir + fname, 2) for fname in os.listdir(phishing_dir) ]
+    untagged = [ (fname, -1) for fname in os.listdir(DATAPATH)]
+
+    emails = legit + spam + phish + untagged
+
+    print(f'''Loaded {len(emails)} emails
+    => Legit:       {len(legit)}
+    => Spam:        {len(spam)}
+    => Phishing:    {len(phish)}
+    ''')
+
+    return emails
 
 def create_conn():
+    """
+    Connect to the database file
+    """
     return sqlite3.connect(DBFILE)
 
 def init_db():
+    """
+    Inititalize database
+    """
     conn = create_conn()
     c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS tags (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, tag INTEGER)')
-    emails = load_emails()
-    untagged = [(filename, 5) for filename in emails]
-    c.executemany('INSERT INTO tags (filename, tag) VALUES (?,?)', untagged)
+    c.execute('CREATE TABLE IF NOT EXISTS tags (id INTEGER PRIMARY KEY AUTOINCREMENT, filepath TEXT NOT NULL, tag INTEGER)')
     conn.commit()
     conn.close()
 
-def add_missing_tags():
-    added = 0
+def tag():
+    """
+    Add the tags to the DB
+    """
     conn = create_conn()
     c = conn.cursor()
-    emails = load_emails()
-    untagged = [(filename, 5) for filename in emails]
-    for tag in untagged:
-        c.execute('SELECT * FROM tags WHERE filename=?', (tag[0],))
-        res = c.fetchone()
-        if not res:
-            c.execute('INSERT INTO tags (filename, tag) VALUES (?,?)', tag)
-            added += 1
-    if added > 0:
-        print(f'{added} rows inserted')
-        conn.commit()
+    tags = load_emails()
+    c.executemany('INSERT INTO tags (filepath, tag) VALUES (?,?)', tags)
+    conn.commit()
     conn.close()
 
 def load_tags():
@@ -54,18 +73,18 @@ def load_tags():
     conn.close()
     return res
 
-def load_tag(filename):
+def load_tag(filepath):
     conn = create_conn()
     c = conn.cursor()
-    c.execute('SELECT * FROM tags WHERE filename=?', (filename,))
+    c.execute('SELECT * FROM tags WHERE filename=?', (filepath,))
     res = c.fetchone()
     conn.close()
     return res
 
-def save_tag(filename, tag):
+def save_tag(filepath, tag):
     conn = create_conn()
     c = conn.cursor()
-    c.execute('UPDATE tags SET tag=? WHERE filename=?', (tag, filename))
+    c.execute('UPDATE tags SET tag=? WHERE filename=?', (tag, filepath))
     conn.commit()
     conn.close()
 
@@ -93,38 +112,35 @@ def index():
         total = len(tags)
     )
 
-@app.route('/show/<filename>', methods=['GET'])
-def show(filename):
+@app.route('/show', methods=['GET'])
+def show():
+    filepath = request.form.get('filepath')
     try:
-        if filename:
-            tag = load_tag(filename)
+        if filepath:
+            tag = load_tag(filepath)
             cat = CATEGORIES.get(tag[2])
-            email = emailyzer.from_file(DATAPATH + filename)
+            email = emailyzer.from_file(filepath)
             return render_template('email.html', email=email, tag=tag, cat=cat)
     except Exception as e:
         print(e)
-        return '404 donkey is sad'
+        return '500 an error occurred'
 
 @app.route('/tag', methods=['POST'])
 def receive_tag():
-    filename = request.form.get('filename')
+    filepath = request.form.get('filepath')
     cat = request.form.get('cat')
-    save_tag(filename, cat)
-    next_tag = get_next(filename)
+    save_tag(filepath, cat)
+    next_tag = get_next(filepath)
     if next_tag:
         return redirect(f'/show/{next_tag[1]}')
     else:
         return '201 donkey needs a nap'
 
 def run_server():
-    if not os.path.isfile(DBFILE):
-        print('DB not present. Creating..')
-        init_db()
-    else:
-        print('Missing files in DB. Adding..')
-        add_missing_tags()
+    init_db()
+    tag()
 
-    app.run()
+    app.run(debug=True)
 
 if __name__ == '__main__':
     run_server()
