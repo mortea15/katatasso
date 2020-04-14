@@ -20,11 +20,17 @@ except ModuleNotFoundError as e:
     sys.exit(2)
 
 
+def warn_failed(failed):
+    logger.warn(f'An error occurred with {len(failed)} files. See `failed.out` for filenames.')
+    with open('failed.out', 'w') as f:
+        f.write('\n'.join(failed))
+
+
 def get_all_tags():
     try:
         conn = sqlite3.connect(DBFILE)
         c = conn.cursor()
-        c.execute('SELECT filename, tag FROM tags')
+        c.execute('SELECT filepath, tag FROM tags')
         res = c.fetchall()
         return res
     except Exception as e:
@@ -46,62 +52,90 @@ def get_file_paths():
 
 # Create a data set for the classification
 def make_dataset(dictionary):
+    failed = []
     features = []
     labels = []
     tags = get_all_tags()
     if tags:
         logger.debug(f'Creating dataset from {len(tags)} files')
-        for filename, tag in progress_bar(tags):
-            data = []
-            filepath = CLF_TRAININGDATA_PATH + filename
-            email = emailyzer.from_file(filepath)
-            content = email.html_as_text
-            words = juicer.process_text(content, ner=False)
-            for entry in dictionary:
-                data.append(words.count(entry[0]))
-            features.append(data)
-            labels.append(tag)
+        for filepath, tag in progress_bar(tags):
+            try:
+                data = []
+                email = emailyzer.from_file(filepath)
+                content = email.html_as_text
+                words = juicer.process_text(content, ner=False)
+                for entry in dictionary:
+                    data.append(words.count(entry[0]))
+                features.append(data)
+                labels.append(tag)
+            except AttributeError:
+                failed.append(filepath.replace(CLF_TRAININGDATA_PATH, ''))
+                pass
+        if failed:
+            warn_failed(failed)
         
     return features, labels
 
 
 # Make a dictionary of the most frequent words
 def make_dictionary():
+    failed = []
     tags = get_all_tags()
     words = []
     logger.debug('Creating dictionary..')
-    for filename, tag in progress_bar(tags):
-        filepath = CLF_TRAININGDATA_PATH + filename
-        email = emailyzer.from_file(filepath)
-        words += email.html_as_text.split()
+    if tags:
+        for filepath, tag in progress_bar(tags):
+            try:
+                email = emailyzer.from_file(filepath)
+                content = email.html_as_text
+                email_words = juicer.process_text(content, ner=False)
+                words += email_words
+            except AttributeError:
+                failed.append(filepath.replace(CLF_TRAININGDATA_PATH, ''))
+                pass
 
-    # Remove non-alphanumeric values
-    words = [word for word in words if word.isalpha()]
+        # Remove non-alphanumeric values
+        words = [word for word in words if word.isalpha()]
 
-    # Get the count of each word
-    dictionary = Counter(words)
+        # Get the count of each word
+        dictionary = Counter(words)
 
-    return dictionary.most_common(CLF_DICT_NUM)
+        if failed:
+            warn_failed(failed)
+
+        return dictionary.most_common(CLF_DICT_NUM)
+    else:
+        logger.error('No tags were found in the database.')
+        return None
 
 
 def create_dataframe():
+    failed = []
     labels = []
     contents = []
     tags = get_all_tags()
     if tags:
-        for filename, tag in progress_bar(tags):
-            filepath = CLF_TRAININGDATA_PATH + filename
-            # Preprocessing
-            email = emailyzer.from_file(filepath)
-            content = email.html_as_text
-            # Lemmatize, remove stopwords
-            words = juicer.process_text(content, ner=False)
-            text = ' '.join(words)
-            contents.append(text)
-            labels.append(tag)
+        for filepath, tag in progress_bar(tags):
+            try:
+                email = emailyzer.from_file(filepath)
+                content = email.html_as_text
+                # Lemmatize, remove stopwords
+                words = juicer.process_text(content, ner=False)
+                text = ' '.join(words)
+                contents.append(text)
+                labels.append(tag)
+            except AttributeError:
+                failed.append(filepath.replace(CLF_TRAININGDATA_PATH, ''))
+                pass
         df = pd.DataFrame(list(zip(labels, contents)), columns = ['label', 'message'])
 
+        if failed:
+            warn_failed(failed)
+
         return df
+    else:
+        logger.error('No tags were found in the database.')
+        return None
 
 
 def process_dataframe(df):
