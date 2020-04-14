@@ -2,15 +2,20 @@
 # -*- coding: utf-8 -*-
 import pickle
 import sys
+import os
 
 import tqdm
 
 from katatasso.helpers.const import FP_MODEL
 from katatasso.helpers.logger import rootLogger as logger
 
+# Force the progress bar to be displayed regardless
+# of verbosity settings. Useful for training on large data sets
+FORCE_BAR = bool(int(os.getenv('FORCE_BAR', '0')))
+
 
 def progress_bar(it):
-    if logger.level < 30:
+    if logger.level < 30 or FORCE_BAR:
         return tqdm.tqdm(it)
     else:
         return it
