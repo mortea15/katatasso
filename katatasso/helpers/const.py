@@ -3,6 +3,7 @@
 import os
 
 CATEGORIES = {
+    -1: 'untagged',
     0: 'legitimate',
     1: 'spam',
     2: 'phishing',
