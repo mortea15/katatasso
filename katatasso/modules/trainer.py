@@ -82,9 +82,9 @@ def trainv2(norm=False, privacy=False):
     model.fit(x_train, y_train)
 
     predicted = model.predict(x_test)
-    print(f'Accuracy: {accuracy_score(y_test, predicted) * 100}%')
-    logger.debug(f'     Accuracy: {np.mean(predicted == y_test) * 100}%')
-    logger.debug(f'     Confusion Matrix:\n{confusion_matrix(y_test, predicted)}')
-    logger.debug(classification_report(y_test, predicted, zero_division=1))
+    print(f'Accuracy (SKLEARN): {accuracy_score(y_test, predicted) * 100}%')
+    print(f'Accuracy (NUMPY): {np.mean(predicted == y_test) * 100}%')
+    print(confusion_matrix(y_test, predicted))
+    print(classification_report(y_test, predicted, zero_division=1))
     save_model(model)
     save_y_test(y_test)
