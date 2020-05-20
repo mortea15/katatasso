@@ -144,3 +144,6 @@ classifier
 *.pkl
 *.db
 *.out
+
+# experiment results
+exp/
