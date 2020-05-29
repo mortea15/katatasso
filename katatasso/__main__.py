@@ -14,14 +14,16 @@ APPNAME = 'katatasso'
 
 
 INDENT = '  '
-HELPMSG = f'''usage: {APPNAME} (-f INPUT_FILE | -s) [-t (v1 | v2) [-n] [-p]] [-c] [-d FORMAT] [-o OUTPUT_FILE] [-v] [-l]
+HELPMSG = f'''usage: {APPNAME} (-f <INPUT_FILE> | -s) [-n] [-a <ALGO>] [-l <NUM_SAMPLES>] [-t <VERSION>] [-c <VERSION>] [-d <FORMAT>] [-o <OUTPUT_FILE>] [-v] [-l]
     Input:
     {INDENT * 1}-f, --infile        {INDENT * 2}Extract entities from file.
     {INDENT * 1}-s, --stdin         {INDENT * 2}Extract entities from STDIN.
 
     Options:
-    {INDENT * 1}-n, --normalize     {INDENT * 2}Normalize the data.
-    {INDENT * 1}-p, --privacy       {INDENT * 2}Use a differentially private Naive Bayes classifier.
+    {INDENT * 1}-n, --std           {INDENT * 2}Standardize the data. Used with `--train`.
+    {INDENT * 1}-a, --algo          {INDENT * 2}Specify the algorithm to use.
+                              Can be either `cnb` (Complement NB) or `mnb` (Multinomial NB)
+    {INDENT * 1}-l, --limit         {INDENT * 2}Use n samples from each category.
 
     Action:
     {INDENT * 1}-t, --train         {INDENT * 2}Train and create a model for classification. Specify either `v1` or `v2` as arg.
@@ -54,7 +56,7 @@ def main():
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hf:st:c:npo:d:v', ['help', 'infile=', 'stdin', 'train=', 'classify=', 'normalize', 'privacy', 'outfile=', 'format=', 'verbose'])
+        opts, args = getopt.getopt(argv, 'hf:st:c:na:l:o:d:v', ['help', 'infile=', 'stdin', 'std', 'algo=', '--limit', 'train=', 'classify=', 'outfile=', 'format=', 'verbose', 'log-file'])
     except getopt.GetoptError:
         print(HELPMSG)
         sys.exit(2)
@@ -78,7 +80,7 @@ def main():
     Log to file
     """
     if v > 0:
-        enable_logfile = list(filter(lambda opt: opt[0] in ('-l', '--log-file'), opts))
+        enable_logfile = list(filter(lambda opt: opt[0] in ('--log-file'), opts))
         if enable_logfile:
             log_to_file()
     
@@ -107,23 +109,37 @@ def main():
                 logger.critical(f'An error occurred while reading from stdin.')
                 logger.error(e)
                 sys.exit(2)
-        elif opt in ('-n', '--normalize'):
-            logger.debug(f'OPTION: Normalizing data.')
-            CONFIG['normalize'] = True
-        elif opt in ('-p', '--privacy'):
-            logger.debug('OPTION: Using differential privacy.')
-            CONFIG['privacy'] = True
+        elif opt in ('-n', '--std'):
+            logger.debug(f'OPTION: Standardizing data.')
+            CONFIG['std'] = True
+        elif opt in ('-a', '--algo'):
+            logger.debug('OPTION: Using Complement Naïve Bayes algorithm')
+            if arg not in ['mnb', 'cnb']:
+                print(HELPMSG)
+                logger.critical(f'The specified algorithm `{arg}` is not available.')
+                sys.exit(2)
+            else:
+                CONFIG['algo'] = arg
+        elif opt in ('-l', '--limit'):
+            if arg.isnumeric:
+                logger.debug(f'OPTION: Using n={arg} samples.')
+                CONFIG['n'] = int(arg)
+            else:
+                print(HELPMSG)
+                logger.critical(f'n={arg} is non-numeric.')
+                sys.exit(2)
         elif opt in ('-t', '--train'):
             logger.debug(f'ACTION: Creating model from dataset')
             if arg == 'v1':
                 katatasso.train(
-                    norm=CONFIG.get('normalize', False),
-                    privacy=CONFIG.get('privacy', False)
+                    std=CONFIG.get('std', False),
+                    algo=CONFIG.get('algo', 'mnb')
                 )
             elif arg == 'v2':
                 katatasso.trainv2(
-                    norm=CONFIG.get('normalize', False),
-                    privacy=CONFIG.get('privacy', False)
+                    std=CONFIG.get('std', False),
+                    algo=CONFIG.get('algo', 'mnb'),
+                    n=CONFIG.get('n', None)
                 )
             else:
                 logger.critical(f'Please specify either `v1` or `v2`. E.g. `katatasso -t v2`')
@@ -131,14 +147,18 @@ def main():
         elif opt in ('-c', '--classify'):
             if TEXT:
                 logger.debug(f'ACTION: Classifying input')
+                if CONFIG.get('cnb'):
+                    algo = 'cnb'
+                else:
+                    algo = 'mnb'
                 if arg == 'v1':
-                    category, accuracy = katatasso.classify(TEXT)
+                    category = katatasso.classify(TEXT, algo=algo)
                 elif arg == 'v2':
-                    category, accuracy = katatasso.classifyv2(TEXT)
+                    category = katatasso.classifyv2(TEXT, algo=algo)
                 else:
                     logger.critical(f'Please specify either `v1` or `v2`. E.g. `katatasso -c v2`')
                     sys.exit(2)
-                result = { 'category': category, 'accuracy': accuracy, 'alias': CATEGORIES.get(category) }
+                result = { 'category': category, 'accuracy': 'n/a', 'alias': CATEGORIES.get(category) }
             else:
                 logger.critical(f'Missing input (specify using -f or -s)')
                 sys.exit(2)
