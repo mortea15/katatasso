@@ -12,6 +12,7 @@ except ModuleNotFoundError as e:
     logger.critical(f'Module `{e.name}` not found. Please install before proceeding.')
     sys.exit(2)
 
+
 def evaluate(model, X, y):
     num_validations = 5
 
@@ -29,7 +30,12 @@ def evaluate(model, X, y):
 
 
 def performance_report(y_test, y_pred):
-    print(classification_report(y_test, y_pred, target_names=categories))
+    try:
+        print(classification_report(y_test, y_pred, target_names=categories, zero_division=0))
+    except ValueError as e:
+        logger.critical(f'Classification report: Invalid param `target_names`.')
+        logger.error(e)
+        print(classification_report(y_test, y_pred, zero_division=0))
 
 
 def plot_confusion_mat(model, x_test, y_test):
