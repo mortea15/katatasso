@@ -8,20 +8,27 @@ from katatasso.helpers.extraction import get_file_paths
 DATAPATH = CLF_TRAININGDATA_PATH
 phishing_dir = DATAPATH + 'phishing/'
 spam_dir = DATAPATH + 'spam/'
+spam2_dir = DATAPATH + 'spam2/'
 legit_dir = DATAPATH + 'legitimate/'
+mal_dir = DATAPATH + 'malware/'
+fraud_dir = DATAPATH + 'fraud/'
 emails = []
 
 def load_emails():
     legit = [ (legit_dir + fname, 0) for fname in os.listdir(legit_dir) ]
-    spam = [ (spam_dir + fname, 1) for fname in os.listdir(spam_dir) ]
+    spam = [ (spam_dir + fname, 1) for fname in os.listdir(spam_dir) ] + [ (spam2_dir + fname, 1) for fname in os.listdir(spam2_dir) ]
     phish = [ (phishing_dir + fname, 2) for fname in os.listdir(phishing_dir) ]
+    malware = [ (mal_dir + fname, 3) for fname in os.listdir(mal_dir) ]
+    fraud = [ (fraud_dir + fname, 4) for fname in os.listdir(fraud_dir) ]
 
-    emails = legit + spam + phish
+    emails = legit + spam + phish + malware + fraud
 
     print(f'''Loaded {len(emails)} emails
     => Legit:       {len(legit)}
     => Spam:        {len(spam)}
     => Phishing:    {len(phish)}
+    => Malware:     {len(malware)}
+    => Fraud:       {len(fraud)}
     ''')
 
     return emails
@@ -55,11 +62,17 @@ def count():
     spam = c.fetchone()[0]
     c.execute('SELECT COUNT(*) FROM tags WHERE tag=?', (2,))
     phish = c.fetchone()[0]
+    c.execute('SELECT COUNT(*) FROM tags WHERE tag=?', (3,))
+    malware = c.fetchone()[0]
+    c.execute('SELECT COUNT(*) FROM tags WHERE tag=?', (4,))
+    fraud = c.fetchone()[0]
     
     print(f'''DB: {total} emails
     => Legit:       {legit}
     => Spam:        {spam}
     => Phishing:    {phish}
+    => Malware:     {malware}
+    => Fraud:       {fraud}
     ''')
 
 
