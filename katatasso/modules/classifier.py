@@ -6,7 +6,7 @@ from katatasso.helpers.const import CATEGORIES
 from katatasso.helpers.extraction import (get_tfidf_counts, make_dictionary,
                                           process_dataframe)
 from katatasso.helpers.logger import rootLogger as logger
-from katatasso.helpers.utils import load_model, load_y_test
+from katatasso.helpers.utils import load_model
 
 try:
     from sklearn.metrics import accuracy_score
@@ -19,8 +19,8 @@ except ModuleNotFoundError as e:
     sys.exit(2)
 
 
-def classify(text):
-    """Classify the text using a Multinomial Naive Bayes model with
+def classify(text, algo='mnb'):
+    """Classify the text using a Naive Bayes model with
         word vector counts
 
         Parameters
@@ -28,15 +28,17 @@ def classify(text):
         text : str
             The text input to classify
 
+        algo : str
+            The algorithm to use
+            `mnb` for Multinomial Naïve Bayes,
+            `cnb` for Complement Naïve Bayes
+
         Returns
         -------
         category : int
             Predicted category for the text
-        accuracy : float
-            The accuracy classification score
     """
-    clf = load_model()
-    y_test = load_y_test()
+    clf = load_model(version='v1', algo=algo)
     dic = make_dictionary()
 
     features = []
@@ -44,15 +46,11 @@ def classify(text):
         features.append(text.count(word[0]))
     predicted = clf.predict([features])
     logger.info(f'CLASSIFICATION => `{CATEGORIES[predicted[0]]}`')
-    accuracy = accuracy_score([y_test[0]], predicted) * 100
-    logger.info(f'     Accuracy: {accuracy  * 100}%')
-    logger.info(f'     Accuracy: {np.mean(predicted == [y_test[0]]) * 100}%')
     category = int(predicted[0])
-    accuracy = float(accuracy)
-    return category, accuracy
+    return category
 
 
-def classifyv2(text):
+def classifyv2(text, algo='mnb'):
     """Classify the text using a Multinomial Naive Bayes model with
         TF-IDF (Term Frequency Inverse Document Frequency) vectors
 
@@ -61,22 +59,18 @@ def classifyv2(text):
         text : str
             The text input to classify
 
+        algo : str
+
+
         Returns
         -------
         category : int
             Predicted category for the text
-        accuracy : float
-            The accuracy classification score
     """
-    clf = load_model()
-    y_test = load_y_test()
-    counts = get_tfidf_counts(text)
+    clf = load_model(version='v2', algo=algo)
+    counts = get_tfidf_counts(text, algo=algo)
 
     predicted = clf.predict(counts)
     logger.info(f'CLASSIFICATION => `{CATEGORIES[predicted[0]]}`')
-    accuracy = accuracy_score(y_test.head(1), predicted) * 100
-    logger.info(f'     Accuracy: {accuracy  * 100}%')
-    logger.info(f'     Accuracy: {np.mean(predicted == y_test.head(1)) * 100}%')
     category = int(predicted[0])
-    accuracy = float(accuracy)
-    return category, accuracy
+    return category
