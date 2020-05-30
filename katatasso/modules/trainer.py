@@ -27,7 +27,7 @@ def generate_dataset():
 
 
 def train(std=False, algo='mnb'):
-    """Train a model using Naive Bayes with word vector counts
+    """Train a model using Naive Bayes
 
         Parameters
         ----------
@@ -72,7 +72,7 @@ def train(std=False, algo='mnb'):
 
 
 def trainv2(std=False, algo='mnb', n=None):
-    """Train a model using Naive Bayes with TF-IDF (Term Frequency Inverse Document Frequency) vectors
+    """Train a model using Naive Bayes
 
         Parameters
         ----------
