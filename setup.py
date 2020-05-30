@@ -50,7 +50,7 @@ setup(
     url='https://github.com/mortea15/katatasso.git',
     author=__author__,
     author_email=__contact__,
-    packages=['katatasso', 'katatasso.modules', 'katatasso.helpers', 'katatasso.tests'], #find_packages(),
+    packages=['katatasso', 'katatasso.modules', 'katatasso.modules.metrics', 'katatasso.helpers', 'katatasso.tests'], #find_packages(),
     classifiers=classifiers,
     zip_safe=False,
     entry_points={'console_scripts': ['katatasso = katatasso.__main__:main', 'katag = katatasso.modules.tagger:run_server']},
